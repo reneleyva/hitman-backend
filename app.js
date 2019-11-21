@@ -54,13 +54,11 @@ app.get("/", (req, res) => {
 app.post("/login", (req, res) => {
 	const email = req.body.email; 
 	const password = req.body.password; 
-
 	const query = `
-		SELECT users.name, users.type, hitmans.id as idHitman 
+		SELECT users.name, users.type, users.id as idHitman 
 		FROM users
-		INNER JOIN hitmans ON hitmans.idUser=users.id 
 		WHERE users.email='${email}' AND users.password='${password}'`; 
-
+	
 	connection.query(query, function (error, results, fields) {
 		if (error) {
 			res.status(500).json(error); 
@@ -89,20 +87,20 @@ app.post("/checkToken", (req, res) => {
 });
 
 /**
- *  GET /getAssignments/id 
+ *  GET /assignments/id 
  */
-app.get("/getAssignments/:id", middleware.checkToken, (req, res) => {
+app.get("/assignments/:id", middleware.checkToken, (req, res) => {
 	const id = req.params.id; 
 
 	const query = `
 		SELECT assignments.id, assignments.descripction, assignmentStatus.statusName as status
 		FROM assignments 
 		INNER JOIN assignmentStatus ON assignments.assignmentStatus=assignmentStatus.id
-		WHERE idHitman=${id} 
+		WHERE assignments.hitmanId=${id} 
 	`; 
-
 	connection.query(query, function (error, results) {
 		if (error) {
+			console.log(error);
 			res.status(500).json(error); 
 		} else {
 			res.status(200).json(results); 
@@ -111,9 +109,9 @@ app.get("/getAssignments/:id", middleware.checkToken, (req, res) => {
 });
 
 /**
- *  POST /checkToken  
+ *  PUT /assignment/status 
  */
-app.post("/updateAssignmentStatus", middleware.checkToken, (req, res) => {
+app.put("/assignment/status", middleware.checkToken, (req, res) => {
 	const idAssignment = req.body.idAssignment; 
 	const status = req.body.status; 
 
@@ -132,6 +130,56 @@ app.post("/updateAssignmentStatus", middleware.checkToken, (req, res) => {
 					res.status(201).json({}); 
 				}
 			})
+		}
+	});
+	
+});
+
+/**
+ *  GET /givenAssignments/:id  
+ */
+app.get("/givenAssignments/:id", middleware.checkToken, (req, res) => {
+	const bossId = req.params.id; 
+
+	const query = `	
+		SELECT assignments.id, hitmans.idUser, assignments.descripction, assignments.assignmentStatus, 
+		assignmentStatus.statusName as status, users.name as name
+		FROM hitmans
+		INNER JOIN assignments ON assignments.hitmanId=hitmans.idUser
+		INNER JOIN assignmentStatus ON assignmentStatus.id=assignments.assignmentStatus
+		INNER JOIN users ON hitmans.idUser=users.id
+		WHERE hitmans.bossId=${bossId}; 
+	`; 
+
+	connection.query(query, function (error, results) {
+		if (error) {
+			res.status(500).json(error); 
+		} else {
+			res.status(200).json(results); 
+		}
+	});
+	
+});
+
+/**
+ *  GET /hitmans/:bossId
+ */
+app.get("/hitmans/:bossId", middleware.checkToken, (req, res) => {
+	const bossId = req.params.bossId; 
+
+	const query = `	
+		SELECT hitmans.id as hitmanId, hitmans.descripction, hitmansStatus.statusName as status, users.name
+		FROM hitmans
+		INNER JOIN hitmansStatus ON hitmansStatus.id=hitmans.statusId
+		INNER JOIN users ON users.id=hitmans.idUser
+		WHERE hitmans.bossId=${bossId};
+	`; 
+
+	connection.query(query, function (error, results) {
+		if (error) {
+			res.status(500).json(error); 
+		} else {
+			res.status(200).json(results); 
 		}
 	});
 	
