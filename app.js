@@ -17,10 +17,10 @@ const port = process.env.PORT || "8080";
 
 //MYSQL CONECTION 
 let connection = mysql.createConnection({
-	host: 'localhost',
-	user: 'root',
-	password: 'root',
-	database: 'hitmanDB'
+	host: process.env.HOST,
+	user: process.env.USER,
+	password: process.env.PASSWORD,
+	database: process.env.DATABASE
 });
 
 connection.connect(function(err) {
