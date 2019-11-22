@@ -29,25 +29,6 @@ connection.connect(function(err) {
   }
 });
 
-
-/**
- * root GET 
- */
-app.get("/", (req, res) => {
-	/* const query = 'SELECT * FROM hitmans;'; 
-	connection.query(query, function (error, results, fields) {
-		// error will be an Error if one occurred during the query
-		// results will contain the results of the query
-		// fields will contain information about the returned results fields (if any)
-		console.log(results);
-		res.status(200).json(results);
-	}); */
-	console.log(process.env.SECRET)
-	let token = getToken(req);
-	console.log(token);
-	res.send(token); 
-});
-
 /**
  *  POST /login  
  */
@@ -168,7 +149,7 @@ app.get("/hitmans/:bossId", middleware.checkToken, (req, res) => {
 	const bossId = req.params.bossId; 
 
 	const query = `	
-		SELECT hitmans.id as hitmanId, hitmans.descripction, hitmansStatus.statusName as status, users.name
+		SELECT users.id as hitmanId, hitmans.descripction, hitmansStatus.statusName as status, users.name
 		FROM hitmans
 		INNER JOIN hitmansStatus ON hitmansStatus.id=hitmans.statusId
 		INNER JOIN users ON users.id=hitmans.idUser
@@ -184,6 +165,69 @@ app.get("/hitmans/:bossId", middleware.checkToken, (req, res) => {
 	});
 	
 });
+
+/**
+ * All hitmans
+ *  GET /hitmans/
+ */
+app.get("/hitmans/", middleware.checkToken, (req, res) => {
+	const query = `	
+		SELECT hitmans.id, hitmans.descripction, hitmansStatus.statusName as status, users.name
+		FROM hitmans
+		INNER JOIN users ON users.id=hitmans.idUser
+		INNER JOIN hitmansStatus ON hitmans.statusId=hitmansStatus.id;`; 
+
+	connection.query(query, function (error, results) {
+		if (error) {
+			res.status(500).json(error); 
+		} else {
+			res.status(200).json(results); 
+		}
+	});
+	
+});
+
+/**
+ * All bosses
+ *  GET /bosses/
+ */
+app.get("/bosses/", middleware.checkToken, (req, res) => {
+	const query = `SELECT * FROM users WHERE type='boss';`; 
+
+	connection.query(query, function (error, results) {
+		if (error) {
+			res.status(500).json(error); 
+		} else {
+			res.status(200).json(results); 
+		}
+	});
+	
+});
+
+
+/**
+ * Add Asignment
+ *  POST /addAssignment/
+ */
+app.post("/addAssignment/", middleware.checkToken, (req, res) => {
+
+	const hitmanId = req.body.idHitman;
+	const descripction = req.body.description;
+
+	const query = `
+		INSERT INTO assignments (descripction, assignmentStatus, hitmanId)
+		VALUES ('${descripction}', 1, ${hitmanId});`; 
+
+	connection.query(query, function (error, results) {
+		if (error) {
+			res.status(500).json(error); 
+		} else {
+			res.status(201).json({}); 
+		}
+	});
+	
+});
+
 
 app.listen(port, () => {
 	console.log(`Listening to requests on http://localhost:${port}`);
