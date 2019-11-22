@@ -172,7 +172,7 @@ app.get("/hitmans/:bossId", middleware.checkToken, (req, res) => {
  */
 app.get("/hitmans/", middleware.checkToken, (req, res) => {
 	const query = `	
-		SELECT hitmans.id, hitmans.descripction, hitmansStatus.statusName as status, users.name
+		SELECT hitmans.id as hitmanId, hitmans.descripction, hitmansStatus.statusName as status, users.name
 		FROM hitmans
 		INNER JOIN users ON users.id=hitmans.idUser
 		INNER JOIN hitmansStatus ON hitmans.statusId=hitmansStatus.id;`; 
@@ -204,6 +204,28 @@ app.get("/bosses/", middleware.checkToken, (req, res) => {
 	
 });
 
+/**
+ * All assigments
+ *  GET /assignments/
+ */
+app.get("/assignments/", middleware.checkToken, (req, res) => {
+	const query = `
+		SELECT assignments.id, hitmans.idUser, assignments.descripction, assignments.assignmentStatus, 
+		assignmentStatus.statusName as status, users.name as name
+		FROM hitmans
+		INNER JOIN assignments ON assignments.hitmanId=hitmans.idUser
+		INNER JOIN assignmentStatus ON assignmentStatus.id=assignments.assignmentStatus
+		INNER JOIN users ON hitmans.idUser=users.id`; 
+
+	connection.query(query, function (error, results) {
+		if (error) {
+			res.status(500).json(error); 
+		} else {
+			res.status(200).json(results); 
+		}
+	});
+	
+});
 
 /**
  * Add Asignment
